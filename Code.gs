@@ -406,38 +406,22 @@ function fetchWithRetry(url, apiKey, acceptHeader) {
   var maxAttempts = 5;
   var attempt = 0;
   var delay = 500;
+  var defaultAcceptHeader = acceptHeader || 'application/json';
 
   if (!apiKey) {
     throw new Error('Missing CLINIKO_API_KEY. Set it in Script Properties or via Cliniko Sync → Set Config.');
   }
 
   while (attempt < maxAttempts) {
+    var response;
     try {
-      var response = UrlFetchApp.fetch(url, {
+      response = UrlFetchApp.fetch(url, {
         headers: {
           Authorization: 'Basic ' + Utilities.base64Encode(apiKey + ':x'),
-          Accept: acceptHeader || 'application/json',
+          Accept: defaultAcceptHeader,
         },
         muteHttpExceptions: true,
       });
-
-      var status = response.getResponseCode();
-      if (status === 429 || status === 503) {
-        Utilities.sleep(delay);
-        delay *= 2;
-        attempt += 1;
-        continue;
-      }
-      if (status >= 200 && status < 300) {
-        return response;
-      }
-      if (status === 401) {
-        throw new Error(
-          'Cliniko API error (401): Unauthorized. Check that CLINIKO_API_KEY is correct and active, ' +
-          'and that your CLINIKO_BASE_URL/CLINIKO_REPORT_BASE_URL match the Cliniko region for that key.'
-        );
-      }
-      throw new Error('Cliniko API error (' + status + '): ' + response.getContentText());
     } catch (error) {
       attempt += 1;
       if (attempt >= maxAttempts) {
@@ -445,8 +429,40 @@ function fetchWithRetry(url, apiKey, acceptHeader) {
       }
       Utilities.sleep(delay);
       delay *= 2;
+      continue;
     }
+
+    var status = response.getResponseCode();
+    if (status >= 200 && status < 300) {
+      return response;
+    }
+    if (status === 401) {
+      var message = response.getContentText() || '(no response body)';
+      throw new Error(
+        'Cliniko API error (401): Unauthorized. ' +
+        'Check that CLINIKO_API_KEY is correct and active, ' +
+        'and that your CLINIKO_BASE_URL/CLINIKO_REPORT_BASE_URL match the Cliniko region for that key. ' +
+        'Response: ' + message
+      );
+    }
+    if (status === 429 || status === 503) {
+      var headers = response.getAllHeaders();
+      var retryAfter = headers && headers['Retry-After'];
+      var waitMs = retryAfter ? Number(retryAfter) * 1000 : delay;
+      Utilities.sleep(waitMs);
+      delay *= 2;
+      attempt += 1;
+      continue;
+    }
+
+    attempt += 1;
+    if (attempt >= maxAttempts) {
+      throw new Error('Cliniko API error (' + status + '): ' + response.getContentText());
+    }
+    Utilities.sleep(delay);
+    delay *= 2;
   }
+
   throw new Error('Cliniko API request failed after retries.');
 }
 
