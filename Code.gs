@@ -265,6 +265,7 @@ function runPatientsWithoutUpcomingAppointmentsReport() {
 
 function fetchPatientsWithoutUpcomingAppointmentsReport(practitionerId, startDate, endDate, businessId) {
   var config = getConfig();
+  var normalizedBaseUrl = config.reportBaseUrl.replace(/\/reports(?:\/[^?]*)?(?:\?.*)?$/, '');
   var endpoint = '/reports/patients/without_upcoming_appointments.csv';
   var params = {
     start_date: toReportDate(startDate),
@@ -277,7 +278,7 @@ function fetchPatientsWithoutUpcomingAppointmentsReport(practitionerId, startDat
     params['business[id]'] = businessId;
   }
 
-  var url = buildUrl(config.reportBaseUrl + endpoint, params);
+  var url = buildUrl(normalizedBaseUrl + endpoint, params);
   var response = fetchWithRetry(url, config.apiKey, 'text/csv');
   var csv = Utilities.parseCsv(response.getContentText());
   if (!csv.length) {
