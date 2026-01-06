@@ -608,6 +608,10 @@ function addDays(date, days) {
   return copy;
 }
 
+function durationMs(startDate) {
+  return new Date().getTime() - startDate.getTime();
+}
+
 function toIsoDate(date) {
   return Utilities.formatDate(date, getConfig().timezone, 'yyyy-MM-dd');
 }
