@@ -405,6 +405,10 @@ function fetchWithRetry(url, apiKey, acceptHeader) {
   var attempt = 0;
   var delay = 500;
 
+  if (!apiKey) {
+    throw new Error('Missing CLINIKO_API_KEY. Set it in Script Properties or via Cliniko Sync → Set Config.');
+  }
+
   while (attempt < maxAttempts) {
     try {
       var response = UrlFetchApp.fetch(url, {
