@@ -103,7 +103,7 @@ function setConfig() {
   if (timezone === null) {
     return;
   }
-  var reportBaseUrl = promptForConfig(ui, 'Report Base URL (e.g., https://clinic.uk1.cliniko.com)', props.getProperty('CLINIKO_REPORT_BASE_URL'));
+  var reportBaseUrl = promptForConfig(ui, 'Report Base URL (clinic web URL)', props.getProperty('CLINIKO_REPORT_BASE_URL'));
   if (reportBaseUrl === null) {
     return;
   }
