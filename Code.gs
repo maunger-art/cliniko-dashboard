@@ -23,6 +23,7 @@ var REPORT_WEEKS_BACK = 8;
 var REPORT_SHEET_NAME = 'Patients_Without_Upcoming_Appointments';
 var REPORT_PRACTITIONER_STATUS_COLUMN = 'Practitioner Follow-up';
 var REPORT_KATE_ACTIONS_COLUMN = 'Kate Actions';
+var REPORT_BASE_URL_DEFAULT = '';
 var REPORT_PRACTITIONER_STATUS_OPTIONS = [
   'referred to specialist contact and rebook',
   'discharged',
@@ -596,7 +597,7 @@ function getConfig() {
     clinicId: props.getProperty('CLINIKO_CLINIC_ID') || '',
     sheetId: props.getProperty('SHEET_ID') || '',
     timezone: props.getProperty('TIMEZONE') || spreadsheet.getSpreadsheetTimeZone(),
-    reportBaseUrl: props.getProperty('CLINIKO_REPORT_BASE_URL') || '',
+    reportBaseUrl: props.getProperty('CLINIKO_REPORT_BASE_URL') || REPORT_BASE_URL_DEFAULT,
     reportBusinessId: props.getProperty('CLINIKO_REPORT_BUSINESS_ID') || '',
     practitionerIds: splitConfigList(props.getProperty('PRACTITIONER_IDS')),
   };
