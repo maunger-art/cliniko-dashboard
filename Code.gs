@@ -425,6 +425,12 @@ function fetchWithRetry(url, apiKey, acceptHeader) {
       if (status >= 200 && status < 300) {
         return response;
       }
+      if (status === 401) {
+        throw new Error(
+          'Cliniko API error (401): Unauthorized. Check that CLINIKO_API_KEY is correct and active, ' +
+          'and that your CLINIKO_BASE_URL/CLINIKO_REPORT_BASE_URL match the Cliniko region for that key.'
+        );
+      }
       throw new Error('Cliniko API error (' + status + '): ' + response.getContentText());
     } catch (error) {
       attempt += 1;
