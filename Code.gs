@@ -21,7 +21,6 @@ var APPOINTMENTS_DAYS_FUTURE = 30;
 var INVOICES_DAYS_PAST = 90;
 var REPORT_WEEKS_BACK = 8;
 var REPORT_SHEET_NAME = 'Patients_Without_Upcoming_Appointments';
-var REPORT_BASE_URL_DEFAULT = 'https://technique-physiotherapy-and-sports-medicine.uk1.cliniko.com';
 var REPORT_PRACTITIONER_STATUS_COLUMN = 'Practitioner Follow-up';
 var REPORT_KATE_ACTIONS_COLUMN = 'Kate Actions';
 var REPORT_PRACTITIONER_STATUS_OPTIONS = [
@@ -103,11 +102,7 @@ function setConfig() {
   if (timezone === null) {
     return;
   }
-  var reportBaseUrl = promptForConfig(
-    ui,
-    'Report Base URL (e.g., https://clinic.uk1.cliniko.com)',
-    props.getProperty('CLINIKO_REPORT_BASE_URL') || REPORT_BASE_URL_DEFAULT
-  );
+  var reportBaseUrl = promptForConfig(ui, 'Report Base URL (e.g., https://clinic.uk1.cliniko.com)', props.getProperty('CLINIKO_REPORT_BASE_URL'));
   if (reportBaseUrl === null) {
     return;
   }
@@ -591,7 +586,7 @@ function getConfig() {
     clinicId: props.getProperty('CLINIKO_CLINIC_ID') || '',
     sheetId: props.getProperty('SHEET_ID') || '',
     timezone: props.getProperty('TIMEZONE') || spreadsheet.getSpreadsheetTimeZone(),
-    reportBaseUrl: props.getProperty('CLINIKO_REPORT_BASE_URL') || REPORT_BASE_URL_DEFAULT,
+    reportBaseUrl: props.getProperty('CLINIKO_REPORT_BASE_URL') || '',
     reportBusinessId: props.getProperty('CLINIKO_REPORT_BUSINESS_ID') || '',
     practitionerIds: splitConfigList(props.getProperty('PRACTITIONER_IDS')),
   };
