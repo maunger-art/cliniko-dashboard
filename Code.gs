@@ -21,7 +21,6 @@ var APPOINTMENTS_DAYS_FUTURE = 30;
 var INVOICES_DAYS_PAST = 90;
 var REPORT_WEEKS_BACK = 8;
 var REPORT_SHEET_NAME = 'Patients_Without_Upcoming_Appointments';
-var REPORT_BASE_URL_DEFAULT = 'https://technique-physiotherapy-and-sports-medicine.uk1.cliniko.com';
 var REPORT_PRACTITIONER_STATUS_COLUMN = 'Practitioner Follow-up';
 var REPORT_KATE_ACTIONS_COLUMN = 'Kate Actions';
 var REPORT_PRACTITIONER_STATUS_OPTIONS = [
@@ -103,11 +102,7 @@ function setConfig() {
   if (timezone === null) {
     return;
   }
-  var reportBaseUrl = promptForConfig(
-    ui,
-    'Report Base URL (clinic web URL)',
-    props.getProperty('CLINIKO_REPORT_BASE_URL') || REPORT_BASE_URL_DEFAULT
-  );
+  var reportBaseUrl = promptForConfig(ui, 'Report Base URL (e.g., https://clinic.uk1.cliniko.com)', props.getProperty('CLINIKO_REPORT_BASE_URL'));
   if (reportBaseUrl === null) {
     return;
   }
@@ -224,7 +219,7 @@ function runPatientsWithoutUpcomingAppointmentsReport() {
   if (!config.reportBaseUrl) {
     throw new Error('Missing CLINIKO_REPORT_BASE_URL in script properties.');
   }
-  var practitionerIds = config.practitionerIds || [];
+  var practitionerIds = config.practitionerIds;
   if (!practitionerIds.length) {
     throw new Error('Missing PRACTITIONER_IDS in script properties.');
   }
@@ -244,26 +239,24 @@ function runPatientsWithoutUpcomingAppointmentsReport() {
       config.reportBusinessId
     );
 
-    if (!headers || (headers.length === 0 && data.headers.length > 0)) {
-      headers = data.headers.slice();
-      if (headers.indexOf('Practitioner Id') === -1) {
-        headers.push('Practitioner Id');
-      }
+    if (!headers) {
+      headers = data.headers;
     }
 
-    var practitionerColumn = headers.indexOf('Practitioner Id');
     data.rows.forEach(function (row) {
-      var newRow = row.slice();
-      while (newRow.length < headers.length) {
-        newRow.push('');
+      if (headers.indexOf('Practitioner Id') === -1) {
+        row.push(practitionerId);
       }
-      newRow[practitionerColumn] = practitionerId;
-      allRows.push(newRow);
+      allRows.push(row);
     });
   });
 
   if (!headers) {
-    headers = ['Practitioner Id'];
+    headers = [];
+  }
+
+  if (headers.indexOf('Practitioner Id') === -1) {
+    headers.push('Practitioner Id');
   }
 
   writeReportToSheet(REPORT_SHEET_NAME, headers, allRows);
@@ -284,17 +277,7 @@ function fetchPatientsWithoutUpcomingAppointmentsReport(practitionerId, startDat
   }
 
   var url = buildUrl(config.reportBaseUrl + endpoint, params);
-  var response;
-  try {
-    response = fetchWithRetry(url, config.apiKey, 'text/csv');
-  } catch (error) {
-    throw new Error(
-      'Report fetch failed for URL: ' + url + '. ' +
-      'Confirm CLINIKO_REPORT_BASE_URL is your clinic web URL (not the API URL), ' +
-      'and that the API key belongs to the same region (e.g., https://api.uk1.cliniko.com/v1) ' +
-      'and has access to reports. Original error: ' + error
-    );
-  }
+  var response = fetchWithRetry(url, config.apiKey, 'text/csv');
   var csv = Utilities.parseCsv(response.getContentText());
   if (!csv.length) {
     return { headers: [], rows: [] };
@@ -449,8 +432,7 @@ function fetchWithRetry(url, apiKey, acceptHeader) {
       if (status === 401) {
         throw new Error(
           'Cliniko API error (401): Unauthorized. Check that CLINIKO_API_KEY is correct and active, ' +
-          'and that your CLINIKO_BASE_URL/CLINIKO_REPORT_BASE_URL match the Cliniko region for that key. ' +
-          'Response: ' + response.getContentText()
+          'and that your CLINIKO_BASE_URL/CLINIKO_REPORT_BASE_URL match the Cliniko region for that key.'
         );
       }
       throw new Error('Cliniko API error (' + status + '): ' + response.getContentText());
@@ -614,7 +596,7 @@ function getConfig() {
     clinicId: props.getProperty('CLINIKO_CLINIC_ID') || '',
     sheetId: props.getProperty('SHEET_ID') || '',
     timezone: props.getProperty('TIMEZONE') || spreadsheet.getSpreadsheetTimeZone(),
-    reportBaseUrl: REPORT_BASE_URL_DEFAULT,
+    reportBaseUrl: props.getProperty('CLINIKO_REPORT_BASE_URL') || '',
     reportBusinessId: props.getProperty('CLINIKO_REPORT_BUSINESS_ID') || '',
     practitionerIds: splitConfigList(props.getProperty('PRACTITIONER_IDS')),
   };
